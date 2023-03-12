@@ -27,14 +27,14 @@ torch.manual_seed(RANDOM_SEED)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 #######################################################
-#   MODELLO PRE-ADDESTRATO DI BERT    
+#   PRE-TRAINED BERT MODEL 
 #######################################################
 
-# BERT_MODEL="dbmdz/bert-base-italian-xxl-uncased"
-BERT_MODEL="dbmdz/bert-base-italian-uncased"
+BERT_MODEL="dbmdz/bert-base-italian-xxl-uncased"
+# BERT_MODEL="dbmdz/bert-base-italian-uncased"
 
 #######################################################
-#   LETTURA E CREAZIONE DATASET    
+#   DATASET
 #######################################################
 
 file_path = "massimev2.csv"
@@ -107,7 +107,7 @@ print(len(X_test))
 N_CLASSES=len(mlb.classes_)
 
 #######################################################
-#   DATASET    
+#   DATASET CLASS
 #######################################################
 
 class MultiLabelDataset(Dataset):
@@ -173,7 +173,7 @@ class MultiLabelDataModule(pl.LightningDataModule):
         return DataLoader(self.test_dataset, batch_size=self.batch_size)
 
 #######################################################
-#   CLASSIFICATORE    
+#   CLASSIFIER    
 #######################################################
 
 class MultiLabelClassifier(pl.LightningModule):
@@ -257,7 +257,7 @@ class MultiLabelClassifier(pl.LightningModule):
 BATCH_SIZE=8
 learning_rate=3e-5
 
-# Tokenizer pre-addestrato
+# Pretrained Tokenizer
 
 tokenizer = BertTokenizer.from_pretrained(BERT_MODEL, do_lower_case=True)
 
@@ -266,7 +266,7 @@ data_module.setup()
 
 step_per_epoch=len(X_train)//BATCH_SIZE
 
-# definizione modello
+# Model definition
 
 model=MultiLabelClassifier(n_classes=N_CLASSES, n_epochs=NUM_EPOCHS, steps_per_epoch=step_per_epoch, learning_rate=learning_rate)
 
@@ -289,7 +289,7 @@ trainer.fit(model, data_module)
 trainer.test(model,datamodule=data_module)
 
 #######################################################
-#   VALUTAZIONE SUL TEST SET    
+#   TEST SET EVALUATION   
 #######################################################
 
 from torch.utils.data import TensorDataset
@@ -357,7 +357,7 @@ for batch in pred_dataloader:
     pred_outs.append(pred_out)
     true_labels.append(label_ids)
 
-# combino tutti i risultati in un'unica lista
+# combining all values in a single list
 
 pred_outs = np.concatenate(pred_outs, axis=0)
 
@@ -368,7 +368,7 @@ print(true_labels[0])
 
 y_true=true_labels.ravel()
 
-# conversione delle probabilità in 0 o 1 a seconda della soglia
+#  converting the probabilities according to the threshold
 
 y_temp=[]
 for predicted_row in pred_outs:
@@ -379,13 +379,13 @@ for predicted_row in pred_outs:
     else:
       temp.append(0)
   y_temp.append(temp)
-y_pred=np.array(y_temp).ravel() # converto in un array monodimensionale
+y_pred=np.array(y_temp).ravel() # converting in a monodimensional array
 
 print(y_pred)
 print(y_true)
 
 #######################################################
-#   CALCOLO METRICHE DI VALUTAZIONE    
+#   METRICS 
 #######################################################
 
 macro_f1 = f1_score(y_true=y_true, y_pred=y_pred, average='macro', zero_division=0)
@@ -409,7 +409,7 @@ print("micro-Recall score: " + str(micro_recall*100))
 print("Weighted-Recall score: " + str(weighted_recall*100))
 
 #######################################################
-#   INFERENZA    
+#   INFERENCE
 #######################################################
 
 inference_text="ai fini dell'applicabilità della dirimente del vizio parziale di mente per i fatti commessi in stato di cronica intossicazione da sostanze stupefacenti non costituisce elemento di prova relativo ad un preesistente stato patologico del soggetto, il fatto che l'imputato sia stato, in precedenza, dichiarato non punibile, per l'ipotesi dell'acquisto o detenzione di modiche quantità di sostanze stupefacenti o psicotrope allo scopo di farne uso personale non terapeutico; pertanto non vi è obbligo per il giudice di disporre perizia."
